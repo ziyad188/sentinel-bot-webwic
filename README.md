@@ -18,7 +18,7 @@ SentinelBot Webwic is a full-stack platform for managing automated QA runs, issu
 
 **Demo Video**
 Add your demo video here:
-- [![Watch the video](docs/demo-thumbnail.png)](https://drive.google.com/file/d/1IQvkQfjvHsuefoAhzOE_3WMrDeNisOeg/view?usp=sharing)
+- [![Watch the video]([docs/demo-thumbnail.png](https://github.com/ziyad188/sentinel-bot-webwic/blob/main/docs/unnamed.png))](https://drive.google.com/file/d/1IQvkQfjvHsuefoAhzOE_3WMrDeNisOeg/view?usp=sharing)
 
 **Configuration**
 Each service has its own environment file:
