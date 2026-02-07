@@ -1,27 +1,73 @@
 
-
-## High-Level Architecture Diagram
+## Architecture Overview
 
 ```mermaid
-flowchart LR
-  UI[Operator Dashboard UI\n(Lovable)] --> ORCH[Run Orchestrator API\nRun config + guardrails]
+graph TB
+    subgraph Client["Client"]
+        API_REQ["API Request<br/>(POST /api/test)"]
+        POLL["Poll Results<br/>(GET /api/runs/:id)"]
+    end
 
-  ORCH --> PW[Playwright Runner\nMobile Emulation Context\n(Device + Network + Locale)]
-  PW -->|Screenshot / Frame| VLM[Claude Computer Use\nVision + Reasoning]
-  VLM -->|Action JSON\n(tap/type/scroll/wait)| EXEC[Action Executor\nMaps action → Playwright input]
-  EXEC --> PW
+    subgraph SentinelBot["SentinelBot Server (FastAPI :8502)"]
+        direction TB
+        SERVER["FastAPI Server"]
+        SCHEDULER["Continuous Scheduler<br/>(24/7 Monitoring)"]
+        
+        subgraph RunEngine["Run Engine"]
+            EXECUTE["_execute_run()"]
+            CALLBACKS["Callbacks<br/>(output, tool, API)"]
+            REALTIME["Real-Time Issue<br/>Detection"]
+        end
+    end
 
-  PW -->|Step logs + timings| OBS[Observability Layer\nTimelines + metrics]
-  PW -->|Screenshots + video clip| EVID[Evidence Store\n(Local/S3)]
+    subgraph AI["Claude AI (Anthropic API)"]
+        LOOP["Agentic Sampling Loop"]
+        PROMPT["System Prompt<br/>+ Persona + Locale"]
+    end
 
-  ORCH -->|Stuck detection| DIAG[Diagnosis Engine\nLLM root cause + severity]
-  DIAG --> ROUTE[Issue Router\nCategory → Owner mapping]
-  ROUTE --> SLACK[Slack / Teams\nLive Alert + Evidence]
-  EVID --> SLACK
+    subgraph Browser["Playwright Browser"]
+        PW_TOOL["PlaywrightComputerTool"]
+        ACTIONS["click, type, scroll,<br/>screenshot, wait"]
+        PERF["Performance Metrics<br/>(Core Web Vitals)"]
+        A11Y["Accessibility Audit<br/>(axe-core)"]
+    end
 
-  OBS --> UI
-  SLACK --> UI
-````
+    subgraph Database["Supabase"]
+        direction TB
+        DB_TABLES["Tables: runs, issues, evidence,<br/>run_logs, run_steps, perf_metrics,<br/>devices, networks, projects"]
+        STORAGE["Storage Buckets<br/>(screenshots, videos)"]
+    end
+
+    subgraph Notifications["Slack"]
+        SLACK["Slack Notifier"]
+    end
+
+    API_REQ --> SERVER
+    SERVER -->|run_id| API_REQ
+    POLL --> SERVER
+
+    SERVER -->|BackgroundTask| EXECUTE
+    SERVER -->|continuous=true| SCHEDULER
+    SCHEDULER -->|rotating combos| EXECUTE
+
+    EXECUTE --> LOOP
+    PROMPT --> LOOP
+    LOOP <-->|tool_use / tool_result| PW_TOOL
+
+    PW_TOOL --> ACTIONS
+    PW_TOOL --> PERF
+    PW_TOOL --> A11Y
+
+    CALLBACKS --> DB_TABLES
+    CALLBACKS --> STORAGE
+    EXECUTE --> DB_TABLES
+    EXECUTE --> STORAGE
+    SERVER --> DB_TABLES
+
+    EXECUTE --> SLACK
+    REALTIME --> SLACK
+```
+
 
 ---
 
