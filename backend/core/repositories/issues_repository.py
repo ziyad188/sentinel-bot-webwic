@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid as _uuid
 from typing import Sequence
 
 import asyncpg
@@ -44,7 +45,7 @@ class IssuesRepository:
                 n.name AS network_name,
                 r.locale
             FROM issues i
-            LEFT JOIN slack_users su ON su.id = i.slack_user_id
+            LEFT JOIN slack_users su ON su.slack_user_id = i.slack_user_id
             LEFT JOIN runs r ON r.id = i.run_id
             LEFT JOIN devices d ON d.id = r.device_id
             LEFT JOIN networks n ON n.id = r.network_id
@@ -64,9 +65,10 @@ class IssuesRepository:
               AND ($4::text IS NULL OR i.status = $4)
         """
 
+        _pid = _uuid.UUID(str(project_id))
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(query, project_id, severity, category, status, limit, offset)
-            total = await conn.fetchval(count_query, project_id, severity, category, status)
+            rows = await conn.fetch(query, _pid, severity, category, status, limit, offset)
+            total = await conn.fetchval(count_query, _pid, severity, category, status)
 
         return rows, int(total or 0)
 
@@ -84,7 +86,7 @@ class IssuesRepository:
             RETURNING id, status
         """
         async with self._pool.acquire() as conn:
-            return await conn.fetchrow(query, issue_id, status)
+            return await conn.fetchrow(query, _uuid.UUID(str(issue_id)), status)
 
     async def get_issue_detail(
         self,
@@ -109,13 +111,13 @@ class IssuesRepository:
                 i.slack_user_id,
                 su.display_name AS owner_name
             FROM issues i
-            LEFT JOIN slack_users su ON su.id = i.slack_user_id
+            LEFT JOIN slack_users su ON su.slack_user_id = i.slack_user_id
             WHERE i.project_id = $1
               AND i.id = $2
             LIMIT 1
         """
         async with self._pool.acquire() as conn:
-            return await conn.fetchrow(query, project_id, issue_id)
+            return await conn.fetchrow(query, _uuid.UUID(str(project_id)), _uuid.UUID(str(issue_id)))
 
     async def list_issue_media(self, *, issue_id: str) -> Sequence[asyncpg.Record]:
         query = """
@@ -132,7 +134,7 @@ class IssuesRepository:
             ORDER BY created_at ASC
         """
         async with self._pool.acquire() as conn:
-            return await conn.fetch(query, issue_id)
+            return await conn.fetch(query, _uuid.UUID(str(issue_id)))
 
     async def get_last_issue(
         self,
@@ -155,7 +157,7 @@ class IssuesRepository:
                 n.name AS network_name,
                 i.created_at
             FROM issues i
-            LEFT JOIN slack_users su ON su.id = i.slack_user_id
+            LEFT JOIN slack_users su ON su.slack_user_id = i.slack_user_id
             LEFT JOIN runs r ON r.id = i.run_id
             LEFT JOIN devices d ON d.id = r.device_id
             LEFT JOIN networks n ON n.id = r.network_id
@@ -163,5 +165,6 @@ class IssuesRepository:
             ORDER BY i.created_at DESC NULLS LAST, i.id DESC
             LIMIT 1
         """
+        _pid = _uuid.UUID(str(project_id)) if project_id else None
         async with self._pool.acquire() as conn:
-            return await conn.fetchrow(query, project_id)
+            return await conn.fetchrow(query, _pid)

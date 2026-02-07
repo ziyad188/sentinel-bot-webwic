@@ -26,7 +26,7 @@ class IssueListItem(BaseModel):
     resolved_at: Optional[datetime] = None
     run_id: Optional[UUID] = None
     slack_url: Optional[str] = None
-    slack_user_id: Optional[UUID] = None
+    slack_user_id: Optional[str] = None
     slack_display_name: Optional[str] = None
     slack_real_name: Optional[str] = None
     slack_email: Optional[str] = None
@@ -78,7 +78,7 @@ class IssueDetailResponse(BaseModel):
     run_id: Optional[UUID] = None
     run_display_id: Optional[str] = None
     slack_url: Optional[str] = None
-    slack_user_id: Optional[UUID] = None
+    slack_user_id: Optional[str] = None
     owner_name: Optional[str] = None
     media: list[IssueMediaItem] = []
 

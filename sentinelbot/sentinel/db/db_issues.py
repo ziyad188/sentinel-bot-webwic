@@ -9,6 +9,24 @@ from .client import get_supabase
 logger = logging.getLogger(__name__)
 
 
+def _resolve_slack_user_to_uuid(slack_user_id: str) -> str | None:
+    """Look up the users table UUID for a given Slack user ID."""
+    try:
+        sb = get_supabase()
+        result = (
+            sb.table("users")
+            .select("id")
+            .eq("slack_user_id", slack_user_id)
+            .limit(1)
+            .execute()
+        )
+        if result.data:
+            return result.data[0]["id"]
+    except Exception as e:
+        logger.warning(f"Could not resolve Slack user {slack_user_id} to UUID: {e}")
+    return None
+
+
 def create_issue(
     *,
     project_id: str,
@@ -23,7 +41,7 @@ def create_issue(
 
     severity: P0 | P1 | P2 | P3
     category: backend | frontend | ux | performance | integration
-    slack_user_id: Slack user ID of the assigned owner
+    slack_user_id: Slack user ID of the assigned owner (resolved to users.id UUID)
     """
     sb = get_supabase()
     row: dict[str, Any] = {
@@ -37,7 +55,14 @@ def create_issue(
     if description:
         row["description"] = description
     if slack_user_id:
-        row["slack_user_id"] = slack_user_id
+        user_uuid = _resolve_slack_user_to_uuid(slack_user_id)
+        if user_uuid:
+            row["slack_user_id"] = user_uuid
+        else:
+            logger.warning(
+                f"Slack user {slack_user_id} not found in users table — "
+                f"issue will be created without assignment"
+            )
     if category:
         # Map our prompt categories to DB categories
         category_map = {
@@ -57,8 +82,6 @@ def create_issue(
 
     result = sb.table("issues").insert(row).execute()
     return result.data[0]
-
-
 def link_issue_to_run(issue_id: str, run_id: str) -> None:
     """Create an issue_runs junction record."""
     sb = get_supabase()

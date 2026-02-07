@@ -52,8 +52,8 @@ class IssuesService:
             items.append(
                 IssueListItem(
                     idx=idx,
-                    id=row["id"],
-                    project_id=row["project_id"],
+                    id=str(row["id"]),
+                    project_id=str(row["project_id"]),
                     title=row["title"],
                     description=row["description"],
                     severity=row["severity"],
@@ -62,16 +62,16 @@ class IssuesService:
                     status=row["status"],
                     created_at=row["created_at"],
                     resolved_at=row["resolved_at"],
-                    run_id=row["run_id"],
+                    run_id=str(row["run_id"]) if row["run_id"] else None,
                     slack_url=row["slack_url"],
                     slack_user_id=row["slack_user_id"],
                     slack_display_name=row["slack_display_name"],
                     slack_real_name=row["slack_real_name"],
                     slack_email=row["slack_email"],
                     slack_avatar_url=row["slack_avatar_url"],
-                    device_id=row["device_id"],
+                    device_id=str(row["device_id"]) if row["device_id"] else None,
                     device_name=row["device_name"],
-                    network_id=row["network_id"],
+                    network_id=str(row["network_id"]) if row["network_id"] else None,
                     network_name=row["network_name"],
                     locale=row["locale"],
                 )
@@ -93,7 +93,7 @@ class IssuesService:
         row = await self._repo.update_issue_status(issue_id=issue_id, status=req.status)
         if not row:
             raise RuntimeError("Issue not found")
-        return IssueStatusUpdateResponse(id=row["id"], status=row["status"])
+        return IssueStatusUpdateResponse(id=str(row["id"]), status=row["status"])
 
     async def get_issue_detail(
         self,
@@ -115,8 +115,8 @@ class IssuesService:
             bucket = settings.STORAGE_BUCKET_SCREENSHOTS
             url = await sign_storage_path(bucket, item["storage_path"])
             return IssueMediaItem(
-                id=item["id"],
-                issue_id=item["issue_id"],
+                id=str(item["id"]),
+                issue_id=str(item["issue_id"]),
                 type=item["type"],
                 storage_path=item["storage_path"],
                 label=item["label"],
@@ -124,7 +124,7 @@ class IssuesService:
                 url=url,
             )
 
-        media_rows = await self._repo.list_issue_media(issue_id=issue_id)
+        media_rows = await self._repo.list_issue_media(issue_id=str(issue_id))
         media = await asyncio.gather(*(build_media(m) for m in media_rows))
 
         run_id = row["run_id"]
@@ -133,8 +133,8 @@ class IssuesService:
             run_display_id = f"RUN-{str(run_id)[:8].upper()}"
 
         return IssueDetailResponse(
-            id=row["id"],
-            project_id=row["project_id"],
+            id=str(row["id"]),
+            project_id=str(row["project_id"]),
             title=row["title"],
             description=row["description"],
             severity=row["severity"],
@@ -143,7 +143,7 @@ class IssuesService:
             status=row["status"],
             created_at=row["created_at"],
             resolved_at=row["resolved_at"],
-            run_id=row["run_id"],
+            run_id=str(row["run_id"]) if row["run_id"] else None,
             run_display_id=run_display_id,
             slack_url=row["slack_url"],
             slack_user_id=row["slack_user_id"],
@@ -160,13 +160,13 @@ class IssuesService:
         if not row:
             raise RuntimeError("No issues found")
 
-        media_rows = await self._repo.list_issue_media(issue_id=(row["id"]))
+        media_rows = await self._repo.list_issue_media(issue_id=str(row["id"]))
         settings = get_settings()
 
         async def build_media(item):
             url = await sign_storage_path(settings.STORAGE_BUCKET_SCREENSHOTS, item["storage_path"])
             return LastIssueMediaItem(
-                id=item["id"],
+                id=str(item["id"]),
                 storage_path=item["storage_path"],
                 label=item["label"],
                 created_at=item["created_at"],
@@ -176,13 +176,13 @@ class IssuesService:
         media = await asyncio.gather(*(build_media(m) for m in media_rows))
 
         return LastIssueResponse(
-            id=row["id"],
-            project_id=row["project_id"],
+            id=str(row["id"]),
+            project_id=str(row["project_id"]),
             title=row["title"],
             description=row["description"],
             severity=row["severity"],
             slack_url=row["slack_url"],
-            slack_user_id=row["slack_user_id"],
+            slack_user_id=str(row["slack_user_id"]) if row["slack_user_id"] else None,
             owner_name=row["owner_name"],
             device_name=row["device_name"],
             network_name=row["network_name"],
