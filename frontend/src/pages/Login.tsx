@@ -237,6 +237,11 @@ const Login = ({ onLogin }: LoginProps) => {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col items-start gap-2 text-xs text-muted-foreground">
+            <div className="w-full rounded-lg border border-border/70 bg-muted/40 p-3 text-xs">
+              <p className="font-semibold text-foreground">Demo account</p>
+              <p className="mt-1">Email: <span className="font-mono">rihan@webwic.com</span></p>
+              <p>Password: <span className="font-mono">rihan@123</span></p>
+            </div>
             <span>
               New here?{" "}
               <Link to="/signup" className="text-primary hover:text-primary/90">
