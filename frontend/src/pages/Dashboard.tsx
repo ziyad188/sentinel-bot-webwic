@@ -16,7 +16,6 @@ const Dashboard = () => {
   const { selectedProjectId } = useProjectSelection();
   const { runConfig } = useRunConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isDemoMode = String(import.meta.env.VITE_DEMO_MODE ?? "").toLowerCase() === "true";
 
   const handleSessionExpired = useCallback(() => {
     clearStoredAuth();
@@ -85,15 +84,6 @@ const Dashboard = () => {
   );
 
   const handleRunNow = async () => {
-    if (!isDemoMode) {
-      toast({
-        title: 'Demo mode disabled',
-        description:
-          'Run workflow is disabled in this environment to avoid cloud billing. See the demo video instead.',
-      });
-      return;
-    }
-
     if (!selectedProjectId) {
       toast({
         variant: 'destructive',
