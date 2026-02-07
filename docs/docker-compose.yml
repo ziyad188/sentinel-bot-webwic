@@ -1,0 +1,25 @@
+services:
+  backend:
+    image: ziyad188/web-bot:backend
+    ports:
+      - "8090:8000"
+    env_file:
+      - .env.backend
+    restart: unless-stopped
+    networks:
+      - web-bot-net
+
+  frontend:
+    image: ziyad188/web-bot:frontend
+    ports:
+      - "3090:80"
+    restart: unless-stopped
+    env_file:
+      - .env.frontend
+    networks:
+      - web-bot-net
+
+networks:
+  web-bot-net:
+    driver: bridge
+    enable_ipv6: true
