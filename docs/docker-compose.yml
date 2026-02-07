@@ -9,6 +9,16 @@ services:
     networks:
       - web-bot-net
 
+  sentinel:
+    image: ziyad188/web-bot:sentinel
+    ports:
+      - "8502:8502"
+    env_file:
+      - .env.sentinel
+    restart: unless-stopped
+    networks:
+      - web-bot-net
+
   frontend:
     image: ziyad188/web-bot:frontend
     ports:
