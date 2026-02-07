@@ -1,28 +1,4 @@
-Below is a **ready-to-use `.md` file** you can literally drop into your repo (for README, docs, or hackathon submission).
-It contains:
 
-* ✅ **Exact architecture diagram (Mermaid)**
-* ✅ **Clear component-by-component explanation**
-* ✅ **Runtime execution flow**
-* ✅ **Why this design works for the hackathon**
-* ✅ **How Claude Computer Use + Playwright interact (clearly explained)**
-
----
-
-````md
-# SentinelBot – Autonomous Mystery Shopper  
-**Architecture & Runtime Flow**
-
----
-
-## Overview
-
-SentinelBot is an autonomous AI agent that continuously tests **mobile signup flows** in a staging environment.  
-It behaves like a **first-time human user**, navigates purely via **visual perception**, detects friction, diagnoses root cause, and escalates issues instantly with evidence.
-
-This system intentionally avoids hard-coded selectors or scripts and instead relies on **vision-driven reasoning** using Claude Computer Use.
-
----
 
 ## High-Level Architecture Diagram
 
