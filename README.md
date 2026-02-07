@@ -16,8 +16,82 @@ SentinelBot Webwic is a full-stack platform for managing automated QA runs, issu
 - The backend calls the Sentinel Runner through `TEST_SERVICE_URL` when you start a run.
 - The Sentinel Runner reads and writes to Supabase and optionally posts to Slack.
 
+---
+
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph Client["Client"]
+        API_REQ["API Request<br/>(POST /api/test)"]
+        POLL["Poll Results<br/>(GET /api/runs/:id)"]
+    end
+
+    subgraph SentinelBot["SentinelBot Server (FastAPI :8502)"]
+        direction TB
+        SERVER["FastAPI Server"]
+        SCHEDULER["Continuous Scheduler<br/>(24/7 Monitoring)"]
+        
+        subgraph RunEngine["Run Engine"]
+            EXECUTE["_execute_run()"]
+            CALLBACKS["Callbacks<br/>(output, tool, API)"]
+            REALTIME["Real-Time Issue<br/>Detection"]
+        end
+    end
+
+    subgraph AI["Claude AI (Anthropic API)"]
+        LOOP["Agentic Sampling Loop"]
+        PROMPT["System Prompt<br/>+ Persona + Locale"]
+    end
+
+    subgraph Browser["Playwright Browser"]
+        PW_TOOL["PlaywrightComputerTool"]
+        ACTIONS["click, type, scroll,<br/>screenshot, wait"]
+        PERF["Performance Metrics<br/>(Core Web Vitals)"]
+        A11Y["Accessibility Audit<br/>(axe-core)"]
+    end
+
+    subgraph Database["Supabase"]
+        direction TB
+        DB_TABLES["Tables: runs, issues, evidence,<br/>run_logs, run_steps, perf_metrics,<br/>devices, networks, projects"]
+        STORAGE["Storage Buckets<br/>(screenshots, videos)"]
+    end
+
+    subgraph Notifications["Slack"]
+        SLACK["Slack Notifier"]
+    end
+
+    API_REQ --> SERVER
+    SERVER -->|run_id| API_REQ
+    POLL --> SERVER
+
+    SERVER -->|BackgroundTask| EXECUTE
+    SERVER -->|continuous=true| SCHEDULER
+    SCHEDULER -->|rotating combos| EXECUTE
+
+    EXECUTE --> LOOP
+    PROMPT --> LOOP
+    LOOP <-->|tool_use / tool_result| PW_TOOL
+
+    PW_TOOL --> ACTIONS
+    PW_TOOL --> PERF
+    PW_TOOL --> A11Y
+
+    CALLBACKS --> DB_TABLES
+    CALLBACKS --> STORAGE
+    EXECUTE --> DB_TABLES
+    EXECUTE --> STORAGE
+    SERVER --> DB_TABLES
+
+    EXECUTE --> SLACK
+    REALTIME --> SLACK
+```
+
+---
+
 **Demo Video**
-Add your demo video here:
+Click on the image to view demo video:
 [![Watch the demo](docs/unnamed.png)](https://drive.google.com/file/d/1IQvkQfjvHsuefoAhzOE_3WMrDeNisOeg/view?usp=sharing)
 
 
@@ -97,73 +171,4 @@ docker run --rm -p 8502:8502 --env-file .env sentinelbot:local
 - Sentinel Runner: `sentinelbot/README.md`
 
 ---
-
-## Architecture Overview
-
-```mermaid
-graph TB
-    subgraph Client["Client"]
-        API_REQ["API Request<br/>(POST /api/test)"]
-        POLL["Poll Results<br/>(GET /api/runs/:id)"]
-    end
-
-    subgraph SentinelBot["SentinelBot Server (FastAPI :8502)"]
-        direction TB
-        SERVER["FastAPI Server"]
-        SCHEDULER["Continuous Scheduler<br/>(24/7 Monitoring)"]
-        
-        subgraph RunEngine["Run Engine"]
-            EXECUTE["_execute_run()"]
-            CALLBACKS["Callbacks<br/>(output, tool, API)"]
-            REALTIME["Real-Time Issue<br/>Detection"]
-        end
-    end
-
-    subgraph AI["Claude AI (Anthropic API)"]
-        LOOP["Agentic Sampling Loop"]
-        PROMPT["System Prompt<br/>+ Persona + Locale"]
-    end
-
-    subgraph Browser["Playwright Browser"]
-        PW_TOOL["PlaywrightComputerTool"]
-        ACTIONS["click, type, scroll,<br/>screenshot, wait"]
-        PERF["Performance Metrics<br/>(Core Web Vitals)"]
-        A11Y["Accessibility Audit<br/>(axe-core)"]
-    end
-
-    subgraph Database["Supabase"]
-        direction TB
-        DB_TABLES["Tables: runs, issues, evidence,<br/>run_logs, run_steps, perf_metrics,<br/>devices, networks, projects"]
-        STORAGE["Storage Buckets<br/>(screenshots, videos)"]
-    end
-
-    subgraph Notifications["Slack"]
-        SLACK["Slack Notifier"]
-    end
-
-    API_REQ --> SERVER
-    SERVER -->|run_id| API_REQ
-    POLL --> SERVER
-
-    SERVER -->|BackgroundTask| EXECUTE
-    SERVER -->|continuous=true| SCHEDULER
-    SCHEDULER -->|rotating combos| EXECUTE
-
-    EXECUTE --> LOOP
-    PROMPT --> LOOP
-    LOOP <-->|tool_use / tool_result| PW_TOOL
-
-    PW_TOOL --> ACTIONS
-    PW_TOOL --> PERF
-    PW_TOOL --> A11Y
-
-    CALLBACKS --> DB_TABLES
-    CALLBACKS --> STORAGE
-    EXECUTE --> DB_TABLES
-    EXECUTE --> STORAGE
-    SERVER --> DB_TABLES
-
-    EXECUTE --> SLACK
-    REALTIME --> SLACK
-```
 
